@@ -33,12 +33,12 @@ func main() {
 		credential)
 
 	msg := ali_mqs.MessageSendRequest{
-		MessageBody:  "hello gogap/ali_mqs",
+		MessageBody:  []byte("hello gogap/ali_mqs"),
 		DelaySeconds: 0,
 		Priority:     8}
 
 	queue := ali_mqs.NewMQSQueue("test", client)
-	ret, err := queue.SendMessage(msg, 0, 8)
+	ret, err := queue.SendMessage(msg)
 
 	if err != nil {
 		logs.Error(err)

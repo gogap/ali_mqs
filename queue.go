@@ -4,12 +4,21 @@ import (
 	"fmt"
 )
 
+type AliMQSQueue interface {
+	Name() string
+	SendMessage(message interface{}) (resp MessageSendResponse, err error)
+	ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64)
+	PeekMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds int64)
+	DeleteMessage(receiptHandle string) (err error)
+	ChangeMessageVisibility(receiptHandle string, visibilityTimeout int64) (resp MessageVisibilityChangeResponse, err error)
+}
+
 type MQSQueue struct {
 	name   string
 	client MQSClient
 }
 
-func NewMQSQueue(name string, client MQSClient) *MQSQueue {
+func NewMQSQueue(name string, client MQSClient) AliMQSQueue {
 	if name == "" {
 		panic("ali_mqs: queue name could not be empty")
 	}
@@ -24,7 +33,7 @@ func (p *MQSQueue) Name() string {
 	return p.name
 }
 
-func (p *MQSQueue) SendMessage(message interface{}, delaySeconds, priority int32) (resp MessageSendResponse, err error) {
+func (p *MQSQueue) SendMessage(message interface{}) (resp MessageSendResponse, err error) {
 	err = p.client.Send(POST, nil, message, fmt.Sprintf("%s/%s", p.name, "messages"), &resp)
 	return
 }
