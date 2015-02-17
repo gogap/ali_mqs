@@ -6,7 +6,7 @@ import (
 
 type AliMQSQueue interface {
 	Name() string
-	SendMessage(message interface{}) (resp MessageSendResponse, err error)
+	SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error)
 	ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64)
 	PeekMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds int64)
 	DeleteMessage(receiptHandle string) (err error)
@@ -33,7 +33,7 @@ func (p *MQSQueue) Name() string {
 	return p.name
 }
 
-func (p *MQSQueue) SendMessage(message interface{}) (resp MessageSendResponse, err error) {
+func (p *MQSQueue) SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error) {
 	err = p.client.Send(POST, nil, message, fmt.Sprintf("%s/%s", p.name, "messages"), &resp)
 	return
 }

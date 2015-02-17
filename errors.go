@@ -21,6 +21,8 @@ var (
 
 	ERR_UNMARSHAL_ERROR_RESPONSE_FAILED = errors.TN(ALI_MQS_ERR_NS, 7, "unmarshal error response failed, {{.err}}")
 	ERR_UNMARSHAL_RESPONSE_FAILED       = errors.TN(ALI_MQS_ERR_NS, 8, "unmarshal response failed, {{.err}}")
+	ERR_DECODE_BODY_FAILED              = errors.TN(ALI_MQS_ERR_NS, 9, "decode body failed, {{.err}}, body: \"{{.body}}\"")
+	ERR_GET_BODY_DECODE_ELEMENT_ERROR   = errors.TN(ALI_MQS_ERR_NS, 10, "get body decode element error, local: {{.local}}, error: {{.err}}")
 
 	ERR_MQS_ACCESS_DENIED                = errors.TN(ALI_MQS_ERR_NS, 100, ali_MQS_ERR_TEMPSTR)
 	ERR_MQS_INVALID_ACCESS_KEY_ID        = errors.TN(ALI_MQS_ERR_NS, 101, ali_MQS_ERR_TEMPSTR)
