@@ -50,6 +50,11 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 	}
 
 	//mqs's http pool is active by send while no message exist, so more sender will get back fast
+	//ali-mqs bug:	error code of 499, while client disconnet the request,
+	//				the mqs server did not drop the sleeping recv connection,
+	//				so the others recv connection could not recv message
+	//				until the sleeping recv released
+
 	var wg sync.WaitGroup
 
 	funcSend := func(respChan chan MessageReceiveResponse, errChan chan error) {
