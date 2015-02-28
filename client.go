@@ -19,7 +19,7 @@ const (
 )
 
 const (
-	DefaultTimeout int64 = 35000
+	DefaultTimeout int64 = 35
 )
 
 type Method string

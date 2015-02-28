@@ -2,6 +2,11 @@ package ali_mqs
 
 import (
 	"fmt"
+	"sync"
+)
+
+var (
+	RECEIVER_COUNT = 10
 )
 
 type AliMQSQueue interface {
@@ -44,15 +49,29 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 		resource = fmt.Sprintf("%s/%s?waitseconds=%d", p.name, "messages", waitseconds)
 	}
 
-	for {
-		resp := MessageReceiveResponse{}
-		err := p.client.Send(GET, nil, nil, resource, &resp)
-		if err != nil {
-			errChan <- err
-		} else {
-			respChan <- resp
+	//mqs's http pool is active by send while no message exist, so more sender will get back fast
+	var wg sync.WaitGroup
+
+	funcSend := func(respChan chan MessageReceiveResponse, errChan chan error) {
+		defer wg.Done()
+		for {
+			resp := MessageReceiveResponse{}
+			err := p.client.Send(GET, nil, nil, resource, &resp)
+			if err != nil {
+				errChan <- err
+			} else {
+				respChan <- resp
+			}
 		}
 	}
+
+	for i := 0; i < RECEIVER_COUNT; i++ {
+		wg.Add(1)
+		go funcSend(respChan, errChan)
+	}
+
+	wg.Wait()
+
 	return
 }
 
