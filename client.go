@@ -32,7 +32,7 @@ const (
 )
 
 type MQSClient interface {
-	Send(method Method, headers map[string]string, message interface{}, resource string, v interface{}) (err error)
+	Send(method Method, headers map[string]string, message interface{}, resource string, v interface{}) (statusCode int, err error)
 }
 
 type AliMQSClient struct {
@@ -42,20 +42,18 @@ type AliMQSClient struct {
 	accessKeyId string
 }
 
-func NewAliMQSClient(url, accessKeyId, accessKeySecret string, credential Credential) *AliMQSClient {
+func NewAliMQSClient(url, accessKeyId, accessKeySecret string) MQSClient {
 	if url == "" {
 		panic("ali-mqs: message queue url is empty")
 	}
 
-	if credential == nil {
-		panic("ali-mqs: client credential is nil")
-	}
+	credential := NewAliMQSCredential(accessKeySecret)
 
 	aliMQSClient := new(AliMQSClient)
 	aliMQSClient.credential = credential
 	aliMQSClient.accessKeyId = accessKeyId
 	aliMQSClient.url = url
-	credential.SetSecretKey(accessKeySecret)
+
 	return aliMQSClient
 }
 
@@ -69,7 +67,7 @@ func (p *AliMQSClient) authorization(method Method, headers map[string]string, r
 	return
 }
 
-func (p *AliMQSClient) Send(method Method, headers map[string]string, message interface{}, resource string, v interface{}) (err error) {
+func (p *AliMQSClient) Send(method Method, headers map[string]string, message interface{}, resource string, v interface{}) (statusCode int, err error) {
 	var xmlContent []byte
 
 	if message == nil {
@@ -138,6 +136,7 @@ func (p *AliMQSClient) Send(method Method, headers map[string]string, message in
 		err = ERR_SEND_REQUEST_FAILED.New(errors.Params{"err": err})
 		return
 	} else if resp != nil {
+		statusCode = resp.StatusCode
 		if bBody, e := ioutil.ReadAll(resp.Body); e != nil {
 			err = ERR_READ_RESPONSE_BODY_FAILED.New(errors.Params{"err": e})
 			return

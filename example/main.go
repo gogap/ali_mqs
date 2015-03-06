@@ -26,11 +26,9 @@ func main() {
 		}
 	}
 
-	credential := ali_mqs.NewAliMQSCredential()
 	client := ali_mqs.NewAliMQSClient(conf.Url,
 		conf.AccessKeyId,
-		conf.AccessKeySecret,
-		credential)
+		conf.AccessKeySecret)
 
 	msg := ali_mqs.MessageSendRequest{
 		MessageBody:  []byte("hello gogap/ali_mqs"),

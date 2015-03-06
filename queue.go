@@ -39,7 +39,7 @@ func (p *MQSQueue) Name() string {
 }
 
 func (p *MQSQueue) SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error) {
-	err = p.client.Send(POST, nil, message, fmt.Sprintf("%s/%s", p.name, "messages"), &resp)
+	_, err = p.client.Send(POST, nil, message, fmt.Sprintf("%s/%s", p.name, "messages"), &resp)
 	return
 }
 
@@ -61,7 +61,7 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 		defer wg.Done()
 		for {
 			resp := MessageReceiveResponse{}
-			err := p.client.Send(GET, nil, nil, resource, &resp)
+			_, err := p.client.Send(GET, nil, nil, resource, &resp)
 			if err != nil {
 				errChan <- err
 			} else {
@@ -83,7 +83,7 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 func (p *MQSQueue) PeekMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds int64) {
 	for {
 		resp := MessageReceiveResponse{}
-		err := p.client.Send(GET, nil, nil, fmt.Sprintf("%s/%s?peekonly=true", p.name, "messages"), &resp)
+		_, err := p.client.Send(GET, nil, nil, fmt.Sprintf("%s/%s?peekonly=true", p.name, "messages"), &resp)
 		if err != nil {
 			errChan <- err
 		} else {
@@ -94,11 +94,11 @@ func (p *MQSQueue) PeekMessage(respChan chan MessageReceiveResponse, errChan cha
 }
 
 func (p *MQSQueue) DeleteMessage(receiptHandle string) (err error) {
-	err = p.client.Send(DELETE, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s", p.name, "messages", receiptHandle), nil)
+	_, err = p.client.Send(DELETE, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s", p.name, "messages", receiptHandle), nil)
 	return
 }
 
 func (p *MQSQueue) ChangeMessageVisibility(receiptHandle string, visibilityTimeout int64) (resp MessageVisibilityChangeResponse, err error) {
-	err = p.client.Send(PUT, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s&VisibilityTimeout=%d", p.name, "messages", receiptHandle, visibilityTimeout), &resp)
+	_, err = p.client.Send(PUT, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s&VisibilityTimeout=%d", p.name, "messages", receiptHandle, visibilityTimeout), &resp)
 	return
 }

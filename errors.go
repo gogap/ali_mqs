@@ -50,4 +50,13 @@ var (
 	ERR_MQS_RECEIPT_HANDLE_ERROR         = errors.TN(ALI_MQS_ERR_NS, 123, ali_MQS_ERR_TEMPSTR)
 	ERR_MQS_SIGNATURE_DOES_NOT_MATCH     = errors.TN(ALI_MQS_ERR_NS, 124, ali_MQS_ERR_TEMPSTR)
 	ERR_MQS_TIME_EXPIRED                 = errors.TN(ALI_MQS_ERR_NS, 125, ali_MQS_ERR_TEMPSTR)
+
+	ERR_MQS_QUEUE_NAME_IS_TOO_LONG                 = errors.TN(ALI_MQS_ERR_NS, 126, "queue name is too long, the max length is 256")
+	ERR_MQS_DELAY_SECONDS_RANGE_ERROR              = errors.TN(ALI_MQS_ERR_NS, 127, "queue delay seconds is not in range of (0~60480)")
+	ERR_MQS_MAX_MESSAGE_SIZE_RANGE_ERROR           = errors.TN(ALI_MQS_ERR_NS, 128, "max message size is not in range of (1024~65536)")
+	ERR_MQS_MSG_RETENTION_PERIOD_RANGE_ERROR       = errors.TN(ALI_MQS_ERR_NS, 129, "message retention period is not in range of (60~129600)")
+	ERR_MQS_MSG_VISIBILITY_TIMEOUT_RANGE_ERROR     = errors.TN(ALI_MQS_ERR_NS, 130, "message visibility timeout is not in range of (1~43200)")
+	ERR_MQS_MSG_POOLLING_WAIT_SECONDS_RANGE_ERROR  = errors.TN(ALI_MQS_ERR_NS, 131, "message poolling wait seconds is not in range of (0~30)")
+	REE_MQS_GET_QUEUE_RET_NUMBER_RANGE_ERROR       = errors.TN(ALI_MQS_ERR_NS, 132, "get queue list param of ret number is not in range of (1~1000)")
+	ERR_MQS_QUEUE_ALREADY_EXIST_AND_HAVE_SAME_ATTR = errors.TN(ALI_MQS_ERR_NS, 133, "mqs queue already exist, and the attribute is the same, queue name: {{.name}}")
 )

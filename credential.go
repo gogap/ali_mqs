@@ -31,8 +31,9 @@ type AliMQSCredential struct {
 	accessKeySecret string
 }
 
-func NewAliMQSCredential() *AliMQSCredential {
+func NewAliMQSCredential(accessKeySecret string) *AliMQSCredential {
 	aliMQSCredential := new(AliMQSCredential)
+	aliMQSCredential.accessKeySecret = accessKeySecret
 	return aliMQSCredential
 }
 
