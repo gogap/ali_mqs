@@ -7,7 +7,7 @@ import (
 const (
 	ALI_MQS_ERR_NS = "MQS"
 
-	ali_MQS_ERR_TEMPSTR = "ali_mqs response status error,code: {{.resp.Code}}, message: {{.resp.Message}}, request id: {{.resp.RequestId}}, host id: {{.resp.HostId}}"
+	ali_MQS_ERR_TEMPSTR = "ali_mqs response status error,code: {{.resp.Code}}, message: {{.resp.Message}}, resource: {{.resource}} request id: {{.resp.RequestId}}, host id: {{.resp.HostId}}"
 )
 
 var (
