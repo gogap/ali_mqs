@@ -55,7 +55,7 @@ func (p *MQSQueue) Stop() {
 		}
 		close(p.stopChans[i])
 	}
-	queue.stopChans = make([]chan bool, RECEIVER_COUNT)
+	p.stopChans = make([]chan bool, RECEIVER_COUNT)
 }
 
 func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64) {
