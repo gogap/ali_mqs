@@ -14,7 +14,7 @@ type AliMQSQueue interface {
 	Name() string
 	SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error)
 	ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64)
-	PeekMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds int64)
+	PeekMessage(respChan chan MessageReceiveResponse, errChan chan error)
 	DeleteMessage(receiptHandle string) (err error)
 	ChangeMessageVisibility(receiptHandle string, visibilityTimeout int64) (resp MessageVisibilityChangeResponse, err error)
 	Stop()
@@ -61,7 +61,7 @@ func (p *MQSQueue) Stop() {
 func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64) {
 	resource := fmt.Sprintf("%s/%s", p.name, "messages")
 	if waitseconds != nil && len(waitseconds) == 1 {
-		resource = fmt.Sprintf("%s/%s?waitseconds=%d", p.name, "messages", waitseconds)
+		resource = fmt.Sprintf("%s/%s?waitseconds=%d", p.name, "messages", waitseconds[0])
 	}
 
 	//mqs's http pool is active by send while no message exist, so more sender will get back fast
@@ -105,7 +105,7 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 	return
 }
 
-func (p *MQSQueue) PeekMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds int64) {
+func (p *MQSQueue) PeekMessage(respChan chan MessageReceiveResponse, errChan chan error) {
 	for {
 		resp := MessageReceiveResponse{}
 		_, err := p.client.Send(GET, nil, nil, fmt.Sprintf("%s/%s?peekonly=true", p.name, "messages"), &resp)
