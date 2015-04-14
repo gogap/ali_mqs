@@ -2,8 +2,6 @@ package ali_mqs
 
 import (
 	"fmt"
-	"sync"
-	"time"
 )
 
 var (
@@ -21,9 +19,9 @@ type AliMQSQueue interface {
 }
 
 type MQSQueue struct {
-	name      string
-	client    MQSClient
-	stopChans []chan bool
+	name     string
+	client   MQSClient
+	stopChan chan bool
 }
 
 func NewMQSQueue(name string, client MQSClient) AliMQSQueue {
@@ -34,7 +32,7 @@ func NewMQSQueue(name string, client MQSClient) AliMQSQueue {
 	queue := new(MQSQueue)
 	queue.client = client
 	queue.name = name
-	queue.stopChans = make([]chan bool, RECEIVER_COUNT)
+	queue.stopChan = make(chan bool)
 	return queue
 }
 
@@ -48,14 +46,7 @@ func (p *MQSQueue) SendMessage(message MessageSendRequest) (resp MessageSendResp
 }
 
 func (p *MQSQueue) Stop() {
-	for i := 0; i < RECEIVER_COUNT; i++ {
-		select {
-		case p.stopChans[i] <- true:
-		case <-time.After(time.Second * 30):
-		}
-		close(p.stopChans[i])
-	}
-	p.stopChans = make([]chan bool, RECEIVER_COUNT)
+	p.stopChan <- true
 }
 
 func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64) {
@@ -64,43 +55,23 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 		resource = fmt.Sprintf("%s/%s?waitseconds=%d", p.name, "messages", waitseconds[0])
 	}
 
-	//mqs's http pool is active by send while no message exist, so more sender will get back fast
-	//ali-mqs bug:	error code of 499, while client disconnet the request,
-	//				the mqs server did not drop the sleeping recv connection,
-	//				so the others recv connection could not recv message
-	//				until the sleeping recv released
+	for {
+		resp := MessageReceiveResponse{}
+		_, err := p.client.Send(GET, nil, nil, resource, &resp)
+		if err != nil {
+			errChan <- err
+		} else {
+			respChan <- resp
+		}
 
-	var wg sync.WaitGroup
-
-	funcSend := func(respChan chan MessageReceiveResponse, errChan chan error, stopChan chan bool) {
-		defer wg.Done()
-		for {
-			resp := MessageReceiveResponse{}
-			_, err := p.client.Send(GET, nil, nil, resource, &resp)
-			if err != nil {
-				errChan <- err
-			} else {
-				respChan <- resp
+		select {
+		case _ = <-p.stopChan:
+			{
+				return
 			}
-
-			select {
-			case _ = <-stopChan:
-				{
-					return
-				}
-			default:
-			}
+		default:
 		}
 	}
-
-	for i := 0; i < RECEIVER_COUNT; i++ {
-		wg.Add(1)
-		stopChan := make(chan bool)
-		p.stopChans[i] = stopChan
-		go funcSend(respChan, errChan, stopChan)
-	}
-
-	wg.Wait()
 
 	return
 }

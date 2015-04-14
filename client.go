@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogap/errors"
@@ -36,10 +37,12 @@ type MQSClient interface {
 }
 
 type AliMQSClient struct {
-	Timeout     int64
-	url         string
-	credential  Credential
-	accessKeyId string
+	Timeout      int64
+	url          string
+	credential   Credential
+	accessKeyId  string
+	clientLocker sync.Mutex
+	client       *http.Client
 }
 
 func NewAliMQSClient(url, accessKeyId, accessKeySecret string) MQSClient {
@@ -53,6 +56,22 @@ func NewAliMQSClient(url, accessKeyId, accessKeySecret string) MQSClient {
 	aliMQSClient.credential = credential
 	aliMQSClient.accessKeyId = accessKeyId
 	aliMQSClient.url = url
+
+	timeoutInt := DefaultTimeout
+
+	if aliMQSClient.Timeout > 0 {
+		timeoutInt = aliMQSClient.Timeout
+	}
+
+	timeout := time.Second * time.Duration(timeoutInt)
+
+	transport := &httpclient.Transport{
+		ConnectTimeout:        time.Second * 3,
+		RequestTimeout:        timeout,
+		ResponseHeaderTimeout: timeout + time.Second,
+	}
+
+	aliMQSClient.client = &http.Client{Transport: transport}
 
 	return aliMQSClient
 }
@@ -100,26 +119,12 @@ func (p *AliMQSClient) Send(method Method, headers map[string]string, message in
 		headers[AUTHORIZATION] = authHeader
 	}
 
-	timeoutInt := DefaultTimeout
 	url := p.url + "/" + resource
-
-	if p.Timeout > 0 {
-		timeoutInt = p.Timeout
-	}
-
-	timeout := time.Second * time.Duration(timeoutInt)
-
-	transport := &httpclient.Transport{
-		ConnectTimeout:        timeout,
-		RequestTimeout:        timeout,
-		ResponseHeaderTimeout: timeout,
-	}
-
-	defer transport.Close()
 
 	postBodyReader := strings.NewReader(string(xmlContent))
 
-	client := &http.Client{Transport: transport}
+	p.clientLocker.Lock()
+	defer p.clientLocker.Unlock()
 
 	var req *http.Request
 	if req, err = http.NewRequest(string(method), url, postBodyReader); err != nil {
@@ -132,10 +137,13 @@ func (p *AliMQSClient) Send(method Method, headers map[string]string, message in
 	}
 
 	var resp *http.Response
-	if resp, err = client.Do(req); err != nil {
+	if resp, err = p.client.Do(req); err != nil {
 		err = ERR_SEND_REQUEST_FAILED.New(errors.Params{"err": err})
 		return
-	} else if resp != nil {
+	}
+
+	if resp != nil {
+		defer resp.Body.Close()
 		statusCode = resp.StatusCode
 		if bBody, e := ioutil.ReadAll(resp.Body); e != nil {
 			err = ERR_READ_RESPONSE_BODY_FAILED.New(errors.Params{"err": e})
