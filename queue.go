@@ -2,10 +2,17 @@ package ali_mqs
 
 import (
 	"fmt"
+	"os"
+	"strings"
 )
 
 var (
 	RECEIVER_COUNT = 10
+)
+
+const (
+	PROXY_PREFIX = "MQS_PROXY_"
+	GLOBAL_PROXY = "MQS_GLOBAL_PROXY"
 )
 
 type AliMQSQueue interface {
@@ -33,6 +40,19 @@ func NewMQSQueue(name string, client MQSClient) AliMQSQueue {
 	queue.client = client
 	queue.name = name
 	queue.stopChan = make(chan bool)
+
+	proxyURL := ""
+	queueProxyEnvKey := PROXY_PREFIX + strings.Replace(strings.ToUpper(name), "-", "_", -1)
+	if url := os.Getenv(queueProxyEnvKey); url != "" {
+		proxyURL = url
+	} else if globalurl := os.Getenv(queueProxyEnvKey); globalurl != "" {
+		proxyURL = globalurl
+	}
+
+	if proxyURL != "" {
+		queue.client.SetProxy(proxyURL)
+	}
+
 	return queue
 }
 

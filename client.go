@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -34,6 +35,7 @@ const (
 
 type MQSClient interface {
 	Send(method Method, headers map[string]string, message interface{}, resource string, v interface{}) (statusCode int, err error)
+	SetProxy(url string)
 }
 
 type AliMQSClient struct {
@@ -43,6 +45,7 @@ type AliMQSClient struct {
 	accessKeyId  string
 	clientLocker sync.Mutex
 	client       *http.Client
+	proxyURL     string
 }
 
 func NewAliMQSClient(url, accessKeyId, accessKeySecret string) MQSClient {
@@ -66,6 +69,7 @@ func NewAliMQSClient(url, accessKeyId, accessKeySecret string) MQSClient {
 	timeout := time.Second * time.Duration(timeoutInt)
 
 	transport := &httpclient.Transport{
+		Proxy:                 aliMQSClient.proxy,
 		ConnectTimeout:        time.Second * 3,
 		RequestTimeout:        timeout,
 		ResponseHeaderTimeout: timeout + time.Second,
@@ -74,6 +78,17 @@ func NewAliMQSClient(url, accessKeyId, accessKeySecret string) MQSClient {
 	aliMQSClient.client = &http.Client{Transport: transport}
 
 	return aliMQSClient
+}
+
+func (p *AliMQSClient) SetProxy(url string) {
+	p.url = url
+}
+
+func (p *AliMQSClient) proxy(req *http.Request) (*url.URL, error) {
+	if p.url != "" {
+		return url.Parse(p.url)
+	}
+	return nil, nil
 }
 
 func (p *AliMQSClient) authorization(method Method, headers map[string]string, resource string) (authHeader string, err error) {
