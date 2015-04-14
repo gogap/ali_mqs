@@ -45,7 +45,7 @@ func NewMQSQueue(name string, client MQSClient) AliMQSQueue {
 	queueProxyEnvKey := PROXY_PREFIX + strings.Replace(strings.ToUpper(name), "-", "_", -1)
 	if url := os.Getenv(queueProxyEnvKey); url != "" {
 		proxyURL = url
-	} else if globalurl := os.Getenv(queueProxyEnvKey); globalurl != "" {
+	} else if globalurl := os.Getenv(GLOBAL_PROXY); globalurl != "" {
 		proxyURL = globalurl
 	}
 
