@@ -102,12 +102,11 @@ func (p *Base64Bytes) UnmarshalXML(d *xml.Decoder, start xml.StartElement) (err 
 		return
 	}
 
-	buf := make([]byte, len(content))
-	if length, e := base64.StdEncoding.Decode(buf, []byte(content)); e != nil {
+	if buf, e := base64.StdEncoding.DecodeString(content); e != nil {
 		err = ERR_DECODE_BODY_FAILED.New(errors.Params{"err": e, "body": content})
 		return
 	} else {
-		*p = Base64Bytes(buf[0:length])
+		*p = Base64Bytes(buf)
 	}
 
 	return nil
