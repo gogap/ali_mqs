@@ -18,9 +18,13 @@ const (
 type AliMQSQueue interface {
 	Name() string
 	SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error)
+	BatchSendMessage(messages ...MessageSendRequest) (resp BatchMessageSendResponse, err error)
 	ReceiveMessage(respChan chan MessageReceiveResponse, errChan chan error, waitseconds ...int64)
+	BatchReceiveMessage(respChan chan BatchMessageReceiveResponse, errChan chan error, numOfMessages int32, waitseconds ...int64)
 	PeekMessage(respChan chan MessageReceiveResponse, errChan chan error)
+	BatchPeekMessage(respChan chan BatchMessageReceiveResponse, errChan chan error, numOfMessages int32)
 	DeleteMessage(receiptHandle string) (err error)
+	BatchDeleteMessage(receiptHandles ...string) (err error)
 	ChangeMessageVisibility(receiptHandle string, visibilityTimeout int64) (resp MessageVisibilityChangeResponse, err error)
 	Stop()
 }
