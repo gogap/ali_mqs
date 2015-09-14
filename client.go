@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	version = "2014-07-08"
+	version = "2015-06-06"
 )
 
 const (
@@ -26,11 +26,19 @@ const (
 
 type Method string
 
+var (
+	errMapping map[string]errors.ErrCodeTemplate
+)
+
+func init() {
+
+}
+
 const (
-	GET    Method = "GET"
-	PUT           = "PUT"
-	POST          = "POST"
-	DELETE        = "DELETE"
+	_GET    Method = "GET"
+	_PUT           = "PUT"
+	_POST          = "POST"
+	_DELETE        = "DELETE"
 )
 
 type MQSClient interface {
@@ -183,138 +191,41 @@ func (p *AliMQSClient) Send(method Method, headers map[string]string, message in
 	return
 }
 
+func initMQSErrors() {
+	errMapping = map[string]errors.ErrCodeTemplate{
+		"AccessDenied":               ERR_MQS_ACCESS_DENIED,
+		"InvalidAccessKeyId":         ERR_MQS_INVALID_ACCESS_KEY_ID,
+		"InternalError":              ERR_MQS_INTERNAL_ERROR,
+		"InvalidAuthorizationHeader": ERR_MQS_INVALID_AUTHORIZATION_HEADER,
+		"InvalidDateHeader":          ERR_MQS_INVALID_DATE_HEADER,
+		"InvalidArgument":            ERR_MQS_INVALID_ARGUMENT,
+		"InvalidDegist":              ERR_MQS_INVALID_DEGIST,
+		"InvalidRequestURL":          ERR_MQS_INVALID_REQUEST_URL,
+		"InvalidQueryString":         ERR_MQS_INVALID_QUERY_STRING,
+		"MalformedXML":               ERR_MQS_MALFORMED_XML,
+		"MissingAuthorizationHeader": ERR_MQS_MISSING_AUTHORIZATION_HEADER,
+		"MissingDateHeader":          ERR_MQS_MISSING_DATE_HEADER,
+		"MissingVersionHeader":       ERR_MQS_MISSING_VERSION_HEADER,
+		"MissingReceiptHandle":       ERR_MQS_MISSING_RECEIPT_HANDLE,
+		"MissingVisibilityTimeout":   ERR_MQS_MISSING_VISIBILITY_TIMEOUT,
+		"MessageNotExist":            ERR_MQS_MESSAGE_NOT_EXIST,
+		"QueueAlreadyExist":          ERR_MQS_QUEUE_ALREADY_EXIST,
+		"QueueDeletedRecently":       ERR_MQS_QUEUE_DELETED_RECENTLY,
+		"InvalidQueueName":           ERR_MQS_INVALID_QUEUE_NAME,
+		"QueueNameLengthError":       ERR_MQS_QUEUE_NAME_LENGTH_ERROR,
+		"QueueNotExist":              ERR_MQS_QUEUE_NOT_EXIST,
+		"ReceiptHandleError":         ERR_MQS_RECEIPT_HANDLE_ERROR,
+		"SignatureDoesNotMatch":      ERR_MQS_SIGNATURE_DOES_NOT_MATCH,
+		"TimeExpired":                ERR_MQS_TIME_EXPIRED,
+		"QpsLimitExceeded":           ERR_MQS_QPS_LIMIT_EXCEEDED,
+	}
+}
+
 func to_error(resp ErrorMessageResponse, resource string) (err error) {
-	switch resp.Code {
-	case "AccessDenied":
-		{
-			err = ERR_MQS_ACCESS_DENIED.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidAccessKeyId":
-		{
-			err = ERR_MQS_INVALID_ACCESS_KEY_ID.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InternalError":
-		{
-			err = ERR_MQS_INTERNAL_ERROR.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidAuthorizationHeader":
-		{
-			err = ERR_MQS_INVALID_AUTHORIZATION_HEADER.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidDateHeader":
-		{
-			err = ERR_MQS_INVALID_DATE_HEADER.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidArgument":
-		{
-			err = ERR_MQS_INVALID_ARGUMENT.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidDegist":
-		{
-			err = ERR_MQS_INVALID_DEGIST.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidRequestURL":
-		{
-			err = ERR_MQS_INVALID_REQUEST_URL.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidQueryString":
-		{
-			err = ERR_MQS_INVALID_QUERY_STRING.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "MalformedXML":
-		{
-			err = ERR_MQS_MALFORMED_XML.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "MissingAuthorizationHeader":
-		{
-			err = ERR_MQS_MISSING_AUTHORIZATION_HEADER.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "MissingDateHeader":
-		{
-			err = ERR_MQS_MISSING_DATE_HEADER.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "MissingVersionHeader":
-		{
-			err = ERR_MQS_MISSING_VERSION_HEADER.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "MissingReceiptHandle":
-		{
-			err = ERR_MQS_MISSING_RECEIPT_HANDLE.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "MissingVisibilityTimeout":
-		{
-			err = ERR_MQS_MISSING_VISIBILITY_TIMEOUT.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "MessageNotExist":
-		{
-			err = ERR_MQS_MESSAGE_NOT_EXIST.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "QueueAlreadyExist":
-		{
-			err = ERR_MQS_QUEUE_ALREADY_EXIST.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "QueueDeletedRecently":
-		{
-			err = ERR_MQS_QUEUE_DELETED_RECENTLY.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidQueueName":
-		{
-			err = ERR_MQS_INVALID_QUEUE_NAME.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidVersionHeader":
-		{
-			err = ERR_MQS_INVALID_VERSION_HEADER.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "InvalidContentType":
-		{
-			err = ERR_MQS_INVALID_CONTENT_TYPE.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "QueueNameLengthError":
-		{
-			err = ERR_MQS_QUEUE_NAME_LENGTH_ERROR.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "QueueNotExist":
-		{
-			err = ERR_MQS_QUEUE_NOT_EXIST.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "ReceiptHandleError":
-		{
-			err = ERR_MQS_RECEIPT_HANDLE_ERROR.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "SignatureDoesNotMatch":
-		{
-			err = ERR_MQS_SIGNATURE_DOES_NOT_MATCH.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
-	case "TimeExpired":
-		{
-			err = ERR_MQS_TIME_EXPIRED.New(errors.Params{"resp": resp, "resource": resource})
-			return
-		}
+	if errCodeTemplate, exist := errMapping[resp.Code]; exist {
+		err = errCodeTemplate.New(errors.Params{"resp": resp, "resource": resource})
+	} else {
+		err = ERR_MQS_UNKNOWN_CODE.New(errors.Params{"resp": resp, "resource": resource})
 	}
 	return
 }

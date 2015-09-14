@@ -135,7 +135,7 @@ func (p *MQSQueueManager) CreateQueue(location MQSLocation, queueName string, de
 	cli := NewAliMQSClient(url, p.accessKeyId, p.accessKeySecret)
 
 	var code int
-	code, err = cli.Send(PUT, nil, &message, queueName, nil)
+	code, err = cli.Send(_PUT, nil, &message, queueName, nil)
 
 	if code == http.StatusNoContent {
 		err = ERR_MQS_QUEUE_ALREADY_EXIST_AND_HAVE_SAME_ATTR.New(errors.Params{"name": queueName})
@@ -172,7 +172,7 @@ func (p *MQSQueueManager) SetQueueAttributes(location MQSLocation, queueName str
 
 	cli := NewAliMQSClient(url, p.accessKeyId, p.accessKeySecret)
 
-	_, err = cli.Send(PUT, nil, &message, fmt.Sprintf("%s?metaoverride=true", queueName), nil)
+	_, err = cli.Send(_PUT, nil, &message, fmt.Sprintf("%s?metaoverride=true", queueName), nil)
 	return
 }
 
@@ -187,7 +187,7 @@ func (p *MQSQueueManager) GetQueueAttributes(location MQSLocation, queueName str
 
 	cli := NewAliMQSClient(url, p.accessKeyId, p.accessKeySecret)
 
-	_, err = cli.Send(GET, nil, nil, queueName, &attr)
+	_, err = cli.Send(_GET, nil, nil, queueName, &attr)
 
 	return
 }
@@ -203,7 +203,7 @@ func (p *MQSQueueManager) DeleteQueue(location MQSLocation, queueName string) (e
 
 	cli := NewAliMQSClient(url, p.accessKeyId, p.accessKeySecret)
 
-	_, err = cli.Send(DELETE, nil, nil, queueName, nil)
+	_, err = cli.Send(_DELETE, nil, nil, queueName, nil)
 
 	return
 }
@@ -235,7 +235,7 @@ func (p *MQSQueueManager) ListQueue(location MQSLocation, marker string, retNumb
 		header["x-mqs-prefix"] = prefix
 	}
 
-	_, err = cli.Send(GET, header, nil, "", &queues)
+	_, err = cli.Send(_GET, header, nil, "", &queues)
 
 	return
 }

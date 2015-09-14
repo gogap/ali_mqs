@@ -50,6 +50,8 @@ var (
 	ERR_MQS_RECEIPT_HANDLE_ERROR         = errors.TN(ALI_MQS_ERR_NS, 123, ali_MQS_ERR_TEMPSTR)
 	ERR_MQS_SIGNATURE_DOES_NOT_MATCH     = errors.TN(ALI_MQS_ERR_NS, 124, ali_MQS_ERR_TEMPSTR)
 	ERR_MQS_TIME_EXPIRED                 = errors.TN(ALI_MQS_ERR_NS, 125, ali_MQS_ERR_TEMPSTR)
+	ERR_MQS_QPS_LIMIT_EXCEEDED           = errors.TN(ALI_MQS_ERR_NS, 134, ali_MQS_ERR_TEMPSTR)
+	ERR_MQS_UNKNOWN_CODE                 = errors.TN(ALI_MQS_ERR_NS, 135, ali_MQS_ERR_TEMPSTR)
 
 	ERR_MQS_QUEUE_NAME_IS_TOO_LONG                 = errors.TN(ALI_MQS_ERR_NS, 126, "queue name is too long, the max length is 256")
 	ERR_MQS_DELAY_SECONDS_RANGE_ERROR              = errors.TN(ALI_MQS_ERR_NS, 127, "queue delay seconds is not in range of (0~60480)")

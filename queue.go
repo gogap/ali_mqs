@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	RECEIVER_COUNT = 10
+	DefaultNumOfMessages int32 = 16
 )
 
 const (
@@ -61,7 +61,21 @@ func (p *MQSQueue) Name() string {
 }
 
 func (p *MQSQueue) SendMessage(message MessageSendRequest) (resp MessageSendResponse, err error) {
-	_, err = p.client.Send(POST, nil, message, fmt.Sprintf("%s/%s", p.name, "messages"), &resp)
+	_, err = p.client.Send(_POST, nil, message, fmt.Sprintf("%s/%s", p.name, "messages"), &resp)
+	return
+}
+
+func (p *MQSQueue) BatchSendMessage(messages ...MessageSendRequest) (resp BatchMessageSendResponse, err error) {
+	if messages == nil || len(messages) == 0 {
+		return
+	}
+
+	batchRequest := BatchMessageSendRequest{}
+	for _, message := range messages {
+		batchRequest.Messages = append(batchRequest.Messages, message)
+	}
+
+	_, err = p.client.Send(_POST, nil, batchRequest, fmt.Sprintf("%s/%s", p.name, "messages"), &resp)
 	return
 }
 
@@ -77,7 +91,38 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 
 	for {
 		resp := MessageReceiveResponse{}
-		_, err := p.client.Send(GET, nil, nil, resource, &resp)
+		_, err := p.client.Send(_GET, nil, nil, resource, &resp)
+		if err != nil {
+			errChan <- err
+		} else {
+			respChan <- resp
+		}
+
+		select {
+		case _ = <-p.stopChan:
+			{
+				return
+			}
+		default:
+		}
+	}
+
+	return
+}
+
+func (p *MQSQueue) BatchReceiveMessage(respChan chan BatchMessageReceiveResponse, errChan chan error, numOfMessages int32, waitseconds ...int64) {
+	if numOfMessages <= 0 {
+		numOfMessages = DefaultNumOfMessages
+	}
+
+	resource := fmt.Sprintf("%s/%s", p.name, "messages")
+	if waitseconds != nil && len(waitseconds) == 1 {
+		resource = fmt.Sprintf("%s/%s?numOfMessages=%d&waitseconds=%d", p.name, "messages", numOfMessages, waitseconds[0])
+	}
+
+	for {
+		resp := BatchMessageReceiveResponse{}
+		_, err := p.client.Send(_GET, nil, nil, resource, &resp)
 		if err != nil {
 			errChan <- err
 		} else {
@@ -99,7 +144,24 @@ func (p *MQSQueue) ReceiveMessage(respChan chan MessageReceiveResponse, errChan 
 func (p *MQSQueue) PeekMessage(respChan chan MessageReceiveResponse, errChan chan error) {
 	for {
 		resp := MessageReceiveResponse{}
-		_, err := p.client.Send(GET, nil, nil, fmt.Sprintf("%s/%s?peekonly=true", p.name, "messages"), &resp)
+		_, err := p.client.Send(_GET, nil, nil, fmt.Sprintf("%s/%s?peekonly=true", p.name, "messages"), &resp)
+		if err != nil {
+			errChan <- err
+		} else {
+			respChan <- resp
+		}
+	}
+	return
+}
+
+func (p *MQSQueue) BatchPeekMessage(respChan chan BatchMessageReceiveResponse, errChan chan error, numOfMessages int32) {
+	if numOfMessages <= 0 {
+		numOfMessages = DefaultNumOfMessages
+	}
+
+	for {
+		resp := BatchMessageReceiveResponse{}
+		_, err := p.client.Send(_GET, nil, nil, fmt.Sprintf("%s/%s?numOfMessages=%d&peekonly=true", p.name, "messages", numOfMessages), &resp)
 		if err != nil {
 			errChan <- err
 		} else {
@@ -110,11 +172,26 @@ func (p *MQSQueue) PeekMessage(respChan chan MessageReceiveResponse, errChan cha
 }
 
 func (p *MQSQueue) DeleteMessage(receiptHandle string) (err error) {
-	_, err = p.client.Send(DELETE, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s", p.name, "messages", receiptHandle), nil)
+	_, err = p.client.Send(_DELETE, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s", p.name, "messages", receiptHandle), nil)
+	return
+}
+
+func (p *MQSQueue) BatchDeleteMessage(receiptHandles ...string) (err error) {
+	if receiptHandles == nil || len(receiptHandles) == 0 {
+		return
+	}
+
+	handlers := ReceiptHandles{}
+
+	for _, handler := range receiptHandles {
+		handlers.ReceiptHandles = append(handlers.ReceiptHandles, handler)
+	}
+
+	_, err = p.client.Send(_DELETE, nil, handlers, fmt.Sprintf("%s/%s", p.name, "messages"), nil)
 	return
 }
 
 func (p *MQSQueue) ChangeMessageVisibility(receiptHandle string, visibilityTimeout int64) (resp MessageVisibilityChangeResponse, err error) {
-	_, err = p.client.Send(PUT, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s&VisibilityTimeout=%d", p.name, "messages", receiptHandle, visibilityTimeout), &resp)
+	_, err = p.client.Send(_PUT, nil, nil, fmt.Sprintf("%s/%s?ReceiptHandle=%s&VisibilityTimeout=%d", p.name, "messages", receiptHandle, visibilityTimeout), &resp)
 	return
 }

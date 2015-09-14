@@ -30,10 +30,25 @@ type MessageSendRequest struct {
 	Priority     int64       `xml:"Priority"`
 }
 
+type BatchMessageSendRequest struct {
+	XMLName  xml.Name             `xml:"Messages"`
+	Messages []MessageSendRequest `xml:"Message"`
+}
+
+type ReceiptHandles struct {
+	XMLName        xml.Name `xml:"ReceiptHandles"`
+	ReceiptHandles []string `xml:"ReceiptHandle"`
+}
+
 type MessageSendResponse struct {
 	MessageResponse
 	MessageId      string `xml:"MessageId" json:"message_id"`
 	MessageBodyMD5 string `xml:"MessageBodyMD5" json:"message_body_md5"`
+}
+
+type BatchMessageSendResponse struct {
+	XMLName  xml.Name              `xml:"Messages" json:"-"`
+	Messages []MessageSendResponse `xml:"Message" json:"messages"`
 }
 
 type CreateQueueRequest struct {
@@ -55,6 +70,11 @@ type MessageReceiveResponse struct {
 	FirstDequeueTime int64       `xml:"FirstDequeueTime" json:"first_dequeue_time"`
 	DequeueCount     int64       `xml:"DequeueCount" json:"dequeue_count"`
 	Priority         int64       `xml:"Priority" json:"priority"`
+}
+
+type BatchMessageReceiveResponse struct {
+	XMLName  xml.Name               `xml:"Messages" json:"-"`
+	Messages MessageReceiveResponse `xml:"Message" json:"messages"`
 }
 
 type MessageVisibilityChangeResponse struct {
